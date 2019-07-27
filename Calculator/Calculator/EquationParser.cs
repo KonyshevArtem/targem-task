@@ -6,6 +6,11 @@ using System.Text.RegularExpressions;
 
 namespace Calculator
 {
+    public interface IParser<out T>
+    {
+        T Parse(string input);
+    }
+
     public interface IToken
     {
         string GetStringValue();
@@ -56,11 +61,11 @@ namespace Calculator
         }
     }
 
-    public class EquationParser
+    public class EquationParser : IParser<List<IToken>>
     {
         private static readonly HashSet<char> PossibleOperands = new HashSet<char> { '+', '-', '*', '/', '(', ')' };
 
-        public static List<IToken> ParseEquation(string equation)
+        public List<IToken> Parse(string equation)
         {
             List<IToken> tokens = new List<IToken>();
             equation = Regex.Replace(equation, @"\s+", string.Empty);
@@ -76,6 +81,7 @@ namespace Calculator
                             throw new ArgumentException("Can't parse float with two dots");
                         isFloat = true;
                     }
+
                     numberBuilder.Append(c);
                 }
                 else if (PossibleOperands.Contains(c))
@@ -86,6 +92,7 @@ namespace Calculator
                         isFloat = false;
                         numberBuilder.Clear();
                     }
+
                     tokens.Add(new OperatorToken(c.ToString()));
                 }
                 else
@@ -93,6 +100,7 @@ namespace Calculator
                     throw new ArgumentException($"Unknown character: {c}");
                 }
             }
+
             if (numberBuilder.Length > 0)
                 tokens.Add(new OperandToken(numberBuilder.ToString()));
             return tokens;
