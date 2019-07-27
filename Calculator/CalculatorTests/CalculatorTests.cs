@@ -80,7 +80,7 @@ namespace CalculatorTests
         {
             ArgumentException exception = Assert.Throws<ArgumentException>(() =>
                 calculator.CalculateReversePolishTokens(tokens));
-            Assert.AreEqual("Invalid reverse polish notation tokens", exception.Message);
+            Assert.AreEqual("Invalid equation", exception.Message);
         }
 
         private static object[] reversePolishCalculationTestSource =
@@ -98,5 +98,41 @@ namespace CalculatorTests
             float result = calculator.CalculateReversePolishTokens(tokens);
             Assert.AreEqual(expectedResult, result);
         }
+
+        private static object[] unaryOperatorsTestSource =
+        {
+            new object[] {SimpleParse("+1"), "1"},
+            new object[] {SimpleParse("1-+1"), "1-1"},
+            new object[] {SimpleParse("1-(+1+1)"), "1-(1+1)"},
+            new object[] {SimpleParse("-1"), "(0-1)"},
+            new object[] {SimpleParse("1+-1"), "1+(0-1)"},
+            new object[] {SimpleParse("1+(-1+1)"), "1+((0-1)+1)"}
+        };
+
+        [Test, TestCaseSource(nameof(unaryOperatorsTestSource))]
+        public void UnaryRemoveFunction_ShouldRemoveUnaryOperators(List<IToken> tokens, string expectedResult)
+        {
+            calculator.RemoveUnaryOperators(tokens);
+            string result = string.Join("", tokens.Select(token => token.GetStringValue()));
+            Assert.AreEqual(expectedResult, result);
+        }
+
+        private static object[] invalidUnaryMinusTestSource =
+        {
+            new object[] {SimpleParse("1+-")},
+            new object[] {SimpleParse("1+-+")},
+            new object[] {SimpleParse("1+(-)")},
+            new object[] {SimpleParse("1+(-")},
+            new object[] {SimpleParse("-")},
+            new object[] {SimpleParse("--")},
+        };
+
+        [Test, TestCaseSource(nameof(invalidUnaryMinusTestSource))]
+        public void UnaryRemoveFunction_ShouldThrowException(List<IToken> tokens)
+        {
+            ArgumentException exception = Assert.Throws<ArgumentException>(() => calculator.RemoveUnaryOperators(tokens));
+            Assert.AreEqual("Invalid unary minus", exception.Message);
+        }
+
     }
 }

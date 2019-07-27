@@ -29,6 +29,37 @@ namespace Calculator
             this.equationParser = equationParser;
         }
 
+        private bool IsUnaryOperator(List<IToken> tokens, int index)
+        {
+            return index == 0 || tokens[index - 1] is OperatorToken && tokens[index - 1].GetStringValue() != ")";
+        }
+
+        public void RemoveUnaryOperators(List<IToken> tokens)
+        {
+            for (int i = 0; i < tokens.Count; ++i)
+            {
+                IToken token = tokens[i];
+                if (token.GetStringValue() == "-")
+                {
+                    if (IsUnaryOperator(tokens, i))
+                    {
+                        if (i == tokens.Count - 1 || !(tokens[i + 1] is OperandToken))
+                            throw new ArgumentException("Invalid unary minus");
+                        tokens.Insert(i, new OperatorToken("("));
+                        tokens.Insert(i + 1, new OperandToken("0"));
+                        tokens.Insert(i + 4, new OperatorToken(")"));
+                    }
+                }
+                else if (token.GetStringValue() == "+")
+                {
+                    if (IsUnaryOperator(tokens, i))
+                    {
+                        tokens.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
         public List<IToken> TransformToReversePolish(List<IToken> tokens)
         {
             List<IToken> reversePolishTokens = new List<IToken>();
@@ -101,6 +132,7 @@ namespace Calculator
         public float Calculate(string equation)
         {
             List<IToken> tokens = equationParser.Parse(equation);
+            RemoveUnaryOperators(tokens);
             List<IToken> reversedPolishTokens = TransformToReversePolish(tokens);
             return CalculateReversePolishTokens(reversedPolishTokens);
         }
