@@ -29,11 +29,23 @@ namespace Calculator
             this.equationParser = equationParser;
         }
 
+        /// <summary>
+        /// Метод, проверяющий является ли унарным токен, находящийся во входном листе на заданном индексе
+        /// </summary>
+        /// <param name="tokens">Лист токенов</param>
+        /// <param name="index">Индекс проверяемого токена</param>
+        /// <returns>Является ли токен унарным</returns>
         private bool IsUnaryOperator(List<IToken> tokens, int index)
         {
             return index == 0 || tokens[index - 1] is OperatorToken && tokens[index - 1].GetStringValue() != ")";
         }
 
+        /// <summary>
+        /// Метод, заменяющий унарные операторы на бинарные
+        /// Алгоритм: https://philcurnow.wordpress.com/2015/01/24/conversion-of-expressions-from-infix-to-postfix-notation-in-c-part-2-unary-operators/
+        /// </summary>
+        /// <param name="tokens">Лист токенов с унарными операторами</param>
+        /// <exception cref="ArgumentException">Выбрасывается, когда унарный минус стоит в конце строки или перед другим оператором</exception>
         public void RemoveUnaryOperators(List<IToken> tokens)
         {
             for (int i = 0; i < tokens.Count; ++i)
@@ -60,6 +72,13 @@ namespace Calculator
             }
         }
 
+        /// <summary>
+        /// Метод, преобразующий лист токенов в инфиксном порядке в постфиксный (обратная польская запись)
+        /// Алгоритм: https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+        /// </summary>
+        /// <param name="tokens">Лист токенов в инфиксном порядке без унарных операторов</param>
+        /// <returns>Лист токенов в постфиксном порядке</returns>
+        /// <exception cref="ArgumentException">Выбрасывается, при неправильном положении скобок в примере</exception>
         public List<IToken> TransformToReversePolish(List<IToken> tokens)
         {
             List<IToken> reversePolishTokens = new List<IToken>();
@@ -107,6 +126,14 @@ namespace Calculator
             return reversePolishTokens;
         }
 
+        /// <summary>
+        /// Метод, вычисляющий результат постфиксной записи
+        /// Алгоритм: https://en.wikipedia.org/wiki/Reverse_Polish_notation#Postfix_evaluation_algorithm
+        /// </summary>
+        /// <param name="tokens">Лист токенов в постфиксном порядке</param>
+        /// <returns>Результат вычисления</returns>
+        /// <exception cref="ArgumentException">Выбрасывается, когда в постфиксной записи остаются неиспользованные операторы
+        /// или когда не хватает операндов для применения очередного оператора</exception>
         public float CalculateReversePolishTokens(List<IToken> tokens)
         {
             Stack<IToken> stack = new Stack<IToken>();

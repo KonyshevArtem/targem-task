@@ -70,6 +70,13 @@ namespace Calculator
     {
         private static readonly HashSet<char> PossibleOperands = new HashSet<char> { '+', '-', '*', '/', '(', ')' };
 
+        /// <summary>
+        /// Метод, разбирающий исходную строку на токены, содержащие числа и операторы
+        /// </summary>
+        /// <param name="equation">Исходная строка, содержащая математический пример</param>
+        /// <returns>Лист токенов</returns>
+        /// <exception cref="ArgumentException">Выбрасывается, когда число с плавающей точкой содержит две точки/запятые или
+        /// когда строка содержит неизвестный символ</exception>
         public List<IToken> Parse(string equation)
         {
             List<IToken> tokens = new List<IToken>();
