@@ -6,9 +6,18 @@ namespace Calculator
     {
         static void Main(string[] args)
         {
+            EquationParser parser = new EquationParser();
+            StringCalculator calculator = new StringCalculator(parser);
             string equation = string.Join("", args);
-            if (equation.Length == 0)
-                throw new ArgumentException("Equation string is empty");
+            try
+            {
+                float result = calculator.Calculate(equation);
+                Console.WriteLine(result);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"ERROR: {exception.Message}");
+            }
         }
     }
 }

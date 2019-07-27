@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Calculator;
-using FakeItEasy;
 using NUnit.Framework;
 
 namespace CalculatorTests
@@ -11,43 +10,42 @@ namespace CalculatorTests
     public class CalculatorTests
     {
         private StringCalculator calculator;
-        private IParser<List<IToken>> parser;
+
+        private static List<IToken> SimpleParse(string input)
+        {
+            List<IToken> tokens = new List<IToken>();
+            foreach (char c in input)
+            {
+                if (char.IsDigit(c))
+                    tokens.Add(new OperandToken(c.ToString()));
+                else
+                    tokens.Add(new OperatorToken(c.ToString()));
+            }
+            return tokens;
+        }
 
         [SetUp]
         public void SetUp()
         {
-            parser = A.Fake<IParser<List<IToken>>>();
-            calculator = new StringCalculator(parser);
+            calculator = new StringCalculator(null);
         }
 
-        [Test]
-        public void Calculator_ShouldThrowException_WhenStringEmpty()
+        private static object[] reversePolishTransformationTestSource =
         {
-            A.CallTo(() => parser.Parse("")).Returns(new List<IToken>());
-            ArgumentException exception = Assert.Throws<ArgumentException>(() => calculator.Calculate(""));
-            Assert.AreEqual("Input equation is empty", exception.Message);
-        }
-
-        private static object[] reversePolishTestSource =
-        {
-            new object[] { new List<IToken>(), ""},
-            new object[] { new List<IToken> {new OperandToken("1")}, "1"},
-            new object[] { new List<IToken> {new OperandToken("1"), new OperandToken("2")}, "12"},
-            new object[] { new List<IToken> {new OperatorToken("("), new OperatorToken(")")}, ""},
-            new object[] { new List<IToken> {new OperatorToken("("), new OperandToken("2") , new OperatorToken(")") }, "2"},
-            new object[] { new List<IToken> {new OperatorToken("+")}, "+"},
-            new object[] { new List<IToken> {new OperandToken("2"), new OperatorToken("+"), new OperandToken("2") }, "22+"},
-            new object[] { new List<IToken> {new OperandToken("2"), new OperatorToken("+"), new OperandToken("2"),
-                new OperatorToken("*"), new OperandToken("2")}, "222*+"},
-            new object[] { new List<IToken> {new OperandToken("2"), new OperatorToken("*"), new OperandToken("2"),
-                new OperatorToken("+"), new OperandToken("2")}, "22*2+"},
-            new object[] { new List<IToken> { new OperatorToken("("), new OperandToken("2"), new OperatorToken("+"),
-                new OperandToken("2"), new OperatorToken(")"), new OperatorToken("*"), new OperandToken("2")}, "22+2*"},
-            new object[] { new List<IToken> {new OperandToken("2"), new OperatorToken("*"), new OperatorToken("("),
-                new OperandToken("2"), new OperatorToken("+"), new OperandToken("2"), new OperatorToken(")")}, "222+*"},
+            new object[] { SimpleParse(""), ""},
+            new object[] { SimpleParse("1"), "1"},
+            new object[] { SimpleParse("12"), "12"},
+            new object[] { SimpleParse("()"), ""},
+            new object[] { SimpleParse("(2)"), "2"},
+            new object[] { SimpleParse("+"), "+"},
+            new object[] { SimpleParse("2+2"), "22+"},
+            new object[] { SimpleParse("2+2*2"), "222*+"},
+            new object[] { SimpleParse("2*2+2"), "22*2+"},
+            new object[] { SimpleParse("(2+2)*2"), "22+2*"},
+            new object[] { SimpleParse("2*(2+2)"), "222+*"},
         };
 
-        [Test, TestCaseSource(nameof(reversePolishTestSource))]
+        [Test, TestCaseSource(nameof(reversePolishTransformationTestSource))]
         public void ReversePolishFunction_ShouldTransformToReversePolishNotation(List<IToken> tokens, string expectedReversePolishEquation)
         {
             List<IToken> reversePolishTokens = calculator.TransformToReversePolish(tokens);
@@ -57,17 +55,48 @@ namespace CalculatorTests
 
         private static object[] invalidBracketsTestSource =
         {
-            new object[] {new List<IToken> {new OperatorToken("(")}},
-            new object[] {new List<IToken> {new OperatorToken(")")}},
-            new object[] {new List<IToken> {new OperandToken("2"), new OperatorToken(")")}}
+            new object[] {SimpleParse("(")},
+            new object[] {SimpleParse(")")},
+            new object[] {SimpleParse("2)")}
         };
 
         [Test, TestCaseSource(nameof(invalidBracketsTestSource))]
         public void ReversePolishFunction_ShouldThrowException_WhenBracketsInvalid(List<IToken> tokens)
         {
             ArgumentException exception = Assert.Throws<ArgumentException>(() =>
-                calculator.TransformToReversePolish(new List<IToken> { new OperatorToken(")") }));
+                calculator.TransformToReversePolish(tokens));
             Assert.AreEqual("Invalid brackets", exception.Message);
+        }
+
+        private static object[] invalidReversePolishTestSource =
+        {
+            new object[] {SimpleParse("")},
+            new object[] {SimpleParse("2+")},
+            new object[] {SimpleParse("222+")},
+        };
+
+        [Test, TestCaseSource(nameof(invalidReversePolishTestSource))]
+        public void ReversePolishCalculation_ShouldThrowException(List<IToken> tokens)
+        {
+            ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+                calculator.CalculateReversePolishTokens(tokens));
+            Assert.AreEqual("Invalid reverse polish notation tokens", exception.Message);
+        }
+
+        private static object[] reversePolishCalculationTestSource =
+        {
+            new object[] {SimpleParse("1"), 1},
+            new object[] {SimpleParse("22+"), 4},
+            new object[] {SimpleParse("63/"), 2},
+            new object[] {SimpleParse("63-"), 3},
+            new object[] {SimpleParse("22*2+"), 6},
+        };
+
+        [Test, TestCaseSource(nameof(reversePolishCalculationTestSource))]
+        public void ReversePolishCalculation_ShouldCalculateTokens(List<IToken> tokens, float expectedResult)
+        {
+            float result = calculator.CalculateReversePolishTokens(tokens);
+            Assert.AreEqual(expectedResult, result);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Calculator
     public class StringCalculator
     {
         private readonly IParser<List<IToken>> equationParser;
-        private static readonly Dictionary<string, int> OperandsPriority = new Dictionary<string, int>()
+        private static readonly Dictionary<string, int> OperatorsPriority = new Dictionary<string, int>()
         {
             { "(", 0 },
             { "+", 1 },
@@ -14,6 +14,15 @@ namespace Calculator
             { "*", 2 },
             { "/", 2 }
         };
+
+        private static readonly Dictionary<string, Func<float, float, float>> OperatorsFunction =
+            new Dictionary<string, Func<float, float, float>>
+            {
+                { "+", (a, b) => a + b },
+                { "-", (a, b) => a - b },
+                { "*", (a, b) => a * b },
+                { "/", (a, b) => a / b }
+            };
 
         public StringCalculator(IParser<List<IToken>> equationParser)
         {
@@ -46,11 +55,11 @@ namespace Calculator
                             reversePolishTokens.Add(stack.Pop());
                         }
                     }
-                    else if (OperandsPriority.ContainsKey(token.GetStringValue()))
+                    else if (OperatorsPriority.ContainsKey(token.GetStringValue()))
                     {
                         while (true)
                         {
-                            if (stack.Count == 0 || OperandsPriority[stack.Peek().GetStringValue()] <= OperandsPriority[token.GetStringValue()])
+                            if (stack.Count == 0 || OperatorsPriority[stack.Peek().GetStringValue()] <= OperatorsPriority[token.GetStringValue()])
                                 break;
                             reversePolishTokens.Add(stack.Pop());
                         }
@@ -67,14 +76,33 @@ namespace Calculator
             return reversePolishTokens;
         }
 
+        public float CalculateReversePolishTokens(List<IToken> tokens)
+        {
+            Stack<IToken> stack = new Stack<IToken>();
+            foreach (IToken token in tokens)
+            {
+                if (token is OperandToken)
+                    stack.Push(token);
+                else
+                {
+                    if (stack.Count < 2)
+                        throw new ArgumentException("Invalid equation");
+                    IToken a = stack.Pop();
+                    IToken b = stack.Pop();
+                    float result = OperatorsFunction[token.GetStringValue()](b.GetFloatValue(), a.GetFloatValue());
+                    stack.Push(new OperandToken(result));
+                }
+            }
+            if (stack.Count != 1)
+                throw new ArgumentException("Invalid equation");
+            return stack.Peek().GetFloatValue();
+        }
+
         public float Calculate(string equation)
         {
             List<IToken> tokens = equationParser.Parse(equation);
-            if (tokens.Count == 0)
-            {
-                throw new ArgumentException("Input equation is empty");
-            }
-            return 0;
+            List<IToken> reversedPolishTokens = TransformToReversePolish(tokens);
+            return CalculateReversePolishTokens(reversedPolishTokens);
         }
     }
 }

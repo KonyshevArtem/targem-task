@@ -30,6 +30,11 @@ namespace Calculator
             }
         }
 
+        public OperandToken(float value)
+        {
+            this.value = value;
+        }
+
         public string GetStringValue()
         {
             return value.ToString(CultureInfo.InvariantCulture);
