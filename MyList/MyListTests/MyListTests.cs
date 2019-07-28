@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using MyList;
 using NUnit.Framework;
 
@@ -19,21 +18,21 @@ namespace MyListTests
         [Test]
         public void Count_ShouldIncrease_WhenItemAdded()
         {
-            MyList<int> myList = new MyList<int> {1};
+            MyList<int> myList = new MyList<int> { 1 };
             Assert.AreEqual(1, myList.Count);
         }
 
         [Test]
         public void List_ShouldReturnItem_WhenAccessedByIndex()
         {
-            MyList<int> myList = new MyList<int> {0};
+            MyList<int> myList = new MyList<int> { 0 };
             Assert.AreEqual(0, myList[0]);
         }
 
         [Test]
         public void List_ShouldSetItem_WhenAccessedByIndex()
         {
-            MyList<int> myList = new MyList<int> {0};
+            MyList<int> myList = new MyList<int> { 0 };
             myList[0] = 1;
             Assert.AreEqual(1, myList[0]);
         }
@@ -42,19 +41,17 @@ namespace MyListTests
         public void List_ShouldThrowException_WhenGetItemByIncorrectIndex(int index)
         {
             MyList<int> myList = new MyList<int>();
-            IndexOutOfRangeException exception = Assert.Throws<IndexOutOfRangeException>(() =>
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
                 int a = myList[index];
             });
-            Assert.AreEqual($"Index {index} is out of range", exception.Message);
         }
 
         [TestCase(-1), TestCase(1)]
         public void List_ShouldThrowException_WhenSetItemByIncorrectIndex(int index)
         {
             MyList<int> myList = new MyList<int>();
-            IndexOutOfRangeException exception = Assert.Throws<IndexOutOfRangeException>(() => { myList[index] = 0; });
-            Assert.AreEqual($"Index {index} is out of range", exception.Message);
+            Assert.Throws<ArgumentOutOfRangeException>(() => { myList[index] = 0; });
         }
 
         [Test]
@@ -112,41 +109,43 @@ namespace MyListTests
         [Test]
         public void List_ShouldBeCleared_WhenClearCalled()
         {
-            MyList<int> myList = new MyList<int> {0};
+            MyList<int> myList = new MyList<int> { 0 };
             myList.Clear();
             Assert.AreEqual(0, myList.Count);
         }
 
-        private static object[] containsTestSource =
+        private static object[] indexOfTestSource =
         {
-            new object[] {new MyList<int> {0}, 0, true},
-            new object[] {new MyList<int>(), 0, false},
-            new object[] {new MyList<Stack<int>> {null}, null, true},
-            new object[] {new MyList<Stack<int>> {new Stack<int>(), null}, null, true},
-            new object[] {new MyList<Stack<int>>(), null, false},
+            new object[] {new MyList<int> {0}, 0, 0},
+            new object[] {new MyList<int> {1, 0}, 0, 1},
+            new object[] {new MyList<int> {1, 0, 0}, 0, 1},
+            new object[] {new MyList<int>(), 0, -1},
+            new object[] {new MyList<Stack<int>> {null}, null, 0},
+            new object[] {new MyList<Stack<int>> {new Stack<int>(), null}, null, 1},
+            new object[] {new MyList<Stack<int>>(), null, -1},
         };
 
-        [Test, TestCaseSource(nameof(containsTestSource))]
-        public void ListContains_ShouldSearchForItem<T>(MyList<T> myList, T searchItem, bool expectedResult)
+        [Test, TestCaseSource(nameof(indexOfTestSource))]
+        public void IndexOf_ShouldReturnIndex<T>(MyList<T> myList, T searchItem, int expectedResult)
         {
-            Assert.AreEqual(expectedResult, myList.Contains(searchItem));
+            Assert.AreEqual(expectedResult, myList.IndexOf(searchItem));
         }
 
         [Test]
-        public void ListContains_ShouldReturnTrue_WhenSameInstance()
+        public void IndexOf_ShouldReturnIndex_WhenSameInstance()
         {
             Stack<int> stack = new Stack<int>();
-            MyList<Stack<int>> myList = new MyList<Stack<int>> {stack};
-            Assert.AreEqual(true, myList.Contains(stack));
+            MyList<Stack<int>> myList = new MyList<Stack<int>> { stack };
+            Assert.AreEqual(0, myList.IndexOf(stack));
         }
 
         [Test]
-        public void ListContains_ShouldReturnFalse_WhenOtherInstance()
+        public void IndexOf_ShouldNotFindIndex_WhenOtherInstance()
         {
             Stack<int> stackA = new Stack<int>();
             Stack<int> stackB = new Stack<int>();
-            MyList<Stack<int>> myList = new MyList<Stack<int>> {stackA};
-            Assert.AreEqual(false, myList.Contains(stackB));
+            MyList<Stack<int>> myList = new MyList<Stack<int>> { stackA };
+            Assert.AreEqual(-1, myList.IndexOf(stackB));
         }
 
         [Test]
@@ -157,10 +156,10 @@ namespace MyListTests
         }
 
         [Test]
-        public void CopyTo_ShouldThrowException_WhenIndexOutOfRange()
+        public void CopyTo_ShouldThrowException_WhenArgumentOutOfRange()
         {
             MyList<int> myList = new MyList<int>();
-            Assert.Throws<IndexOutOfRangeException>(() => myList.CopyTo(new int[10], -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => myList.CopyTo(new int[10], -1));
         }
 
         private static object[] copyToTestSource =
@@ -178,7 +177,7 @@ namespace MyListTests
         [Test]
         public void CopyTo_ShouldCopyItems()
         {
-            MyList<int> myList = new MyList<int> {1, 2, 3};
+            MyList<int> myList = new MyList<int> { 1, 2, 3 };
             int[] array = new int[4];
             myList.CopyTo(array, 1);
             for (int i = 0; i < array.Length; ++i)
@@ -191,10 +190,76 @@ namespace MyListTests
         public void CopyTo_ShouldCopyByReference_WhenListContainsClasses()
         {
             Stack<int> stack = new Stack<int>();
-            MyList<Stack<int>> myList = new MyList<Stack<int>> {stack};
+            MyList<Stack<int>> myList = new MyList<Stack<int>> { stack };
             Stack<int>[] array = new Stack<int>[1];
             myList.CopyTo(array, 0);
             Assert.AreSame(stack, array[0]);
+        }
+
+        private static object[] containsTestSource =
+        {
+            new object[] {new MyList<int>(), 0, false},
+            new object[] {new MyList<int> {0}, 0, true}
+        };
+
+        [Test, TestCaseSource(nameof(containsTestSource))]
+        public void Contains_ShouldSearchForItem(MyList<int> myList, int item, bool expectedResult)
+        {
+            Assert.AreEqual(expectedResult, myList.Contains(item));
+        }
+
+        [TestCase(-1), TestCase(0)]
+        public void RemoveAt_ShouldThrowException_WhenIncorrectIndex(int index)
+        {
+            MyList<int> myList = new MyList<int>();
+            Assert.Throws<ArgumentOutOfRangeException>(() => myList.RemoveAt(index));
+        }
+
+        [Test]
+        public void RemoveAt_ShouldRemoveOneElement()
+        {
+            MyList<int> myList = new MyList<int> { 0 };
+            myList.RemoveAt(0);
+            Assert.AreEqual(0, myList.Count);
+        }
+
+        [Test]
+        public void RemoveAt_ShouldRemoveLastElement_WhenManyElements()
+        {
+            MyList<int> myList = new MyList<int> { 0, 1, 2, 3 };
+            myList.RemoveAt(myList.Count - 1);
+            Assert.AreEqual(3, myList.Count);
+            for (int i = 0; i < myList.Count; ++i)
+            {
+                Assert.AreEqual(i, myList[i]);
+            }
+        }
+
+        [Test]
+        public void RemoveAt_ShouldRemoveElementInMiddle()
+        {
+            MyList<int> myList = new MyList<int> { 0, 1, 4, 2 };
+            myList.RemoveAt(2);
+            Assert.AreEqual(3, myList.Count);
+            for (int i = 0; i < myList.Count; ++i)
+            {
+                Assert.AreEqual(i, myList[i]);
+            }
+        }
+
+        [Test]
+        public void Remove_ShouldReturnFalse_WhenListNotContainsItem()
+        {
+            MyList<int> myList = new MyList<int>();
+            Assert.AreEqual(false, myList.Remove(0));
+        }
+
+        [Test]
+        public void Remove_ShouldReturnTrueAndRemove_WhenItemFound()
+        {
+            MyList<int> myList = new MyList<int> { 0 };
+            Assert.AreEqual(true, myList.Remove(0));
+            Assert.AreEqual(0, myList.Count);
         }
     }
 }

@@ -7,11 +7,10 @@ namespace MyList
     public class MyList<T> : IList<T>
     {
         private T[] array = new T[10];
-        private int count = 0;
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < Count; ++i)
             {
                 yield return array[i];
             }
@@ -32,14 +31,14 @@ namespace MyList
         /// <param name="item">Объект, добавляемый в лист</param>
         public void Add(T item)
         {
-            if (count == array.Length - 1)
+            if (Count == array.Length - 1)
             {
-                T[] newArray = new T[count * 2];
+                T[] newArray = new T[Count * 2];
                 array.CopyTo(newArray, 0);
                 array = newArray;
             }
 
-            array[count++] = item;
+            array[Count++] = item;
         }
 
         /// <summary>
@@ -48,9 +47,9 @@ namespace MyList
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < Count; ++i)
                 array[i] = default(T);
-            count = 0;
+            Count = 0;
         }
 
         /// <summary>
@@ -61,19 +60,12 @@ namespace MyList
         /// <returns>Находится ли входной объект в листе</returns>
         public bool Contains(T item)
         {
-            for (int i = 0; i < count; ++i)
-            {
-                if (item == null && array[i] == null || item != null && item.Equals(array[i]))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return IndexOf(item) != -1;
         }
 
         /// <summary>
         /// Метод для копирования объектов листа во входной массив, начиная с указанного индекса
+        /// O(n)
         /// </summary>
         /// <param name="array">Массив, в который происходит копирование</param>
         /// <param name="arrayIndex">Индекс, с которого объекты помещаются в новый массив</param>
@@ -86,26 +78,50 @@ namespace MyList
             if (array == null)
                 throw new ArgumentNullException(nameof(array));
             if (arrayIndex < 0)
-                throw new IndexOutOfRangeException($"Index {arrayIndex} is out of range");
-            if (count > array.Length - arrayIndex)
-                throw new ArgumentException("Input array too small");
-            for (int i = 0; i < count; ++i)
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+            if (Count > array.Length - arrayIndex)
+                throw new ArgumentException("Input array too small", nameof(array));
+            for (int i = 0; i < Count; ++i)
             {
                 array[i + arrayIndex] = this.array[i];
             }
         }
 
+        /// <summary>
+        /// Метод для удаления объекта, найденного в листе
+        /// O(n)
+        /// </summary>
+        /// <param name="item">Объект для удаления из листа</param>
+        /// <returns>true если объект найден и удален, false если объект не найден</returns>
         public bool Remove(T item)
         {
-            throw new System.NotImplementedException();
+            int itemIndex = IndexOf(item);
+            if (itemIndex == -1)
+                return false;
+            RemoveAt(itemIndex);
+            return true;
         }
 
-        public int Count => count;
+        public int Count { get; private set; }
         public bool IsReadOnly => false;
 
+        /// <summary>
+        /// Метод для нахождения индекса первого равного объекта, находящегося в листе
+        /// O(n)
+        /// </summary>
+        /// <param name="item">Объект для поиска в листе</param>
+        /// <returns>Индекс объекта, если он найден, иначе -1</returns>
         public int IndexOf(T item)
         {
-            throw new System.NotImplementedException();
+            for (int i = 0; i < Count; ++i)
+            {
+                if (item == null && array[i] == null || item != null && item.Equals(array[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public void Insert(int index, T item)
@@ -113,29 +129,44 @@ namespace MyList
             throw new System.NotImplementedException();
         }
 
+        /// <summary>
+        /// Метод для удаления элемента, находящегося на заданном индексе
+        /// O(n)
+        /// </summary>
+        /// <param name="index">Индекс, на котором необходимо удалить элемент</param>
+        /// <exception cref="ArgumentOutOfRangeException">Выкидывается, когда заданный индекс меньше нуля или больше длины массива</exception>
         public void RemoveAt(int index)
         {
-            throw new System.NotImplementedException();
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            array[index] = default(T);
+            for (int i = index; i < Count - 1; ++i)
+            {
+                array[i] = array[i + 1];
+                array[i + 1] = default(T);
+            }
+
+            --Count;
         }
 
         /// <summary>
         /// Свойство для получения и установки объекта в лист по заданному индексу
         /// </summary>
         /// <param name="index">Индекс для установки или получения объекта</param>
-        /// <exception cref="IndexOutOfRangeException">Выбрасывается, когда индекс меньше нуля или
+        /// <exception cref="ArgumentOutOfRangeException">Выбрасывается, когда индекс меньше нуля или
         /// больше количества объектов в списке</exception>
         public T this[int index]
         {
             get
             {
                 if (index < 0 || index >= Count)
-                    throw new IndexOutOfRangeException($"Index {index} is out of range");
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 return array[index];
             }
             set
             {
                 if (index < 0 || index >= Count)
-                    throw new IndexOutOfRangeException($"Index {index} is out of range");
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 array[index] = value;
             }
         }
