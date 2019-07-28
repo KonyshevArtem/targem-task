@@ -63,7 +63,7 @@ namespace MyList
         {
             for (int i = 0; i < count; ++i)
             {
-                if (item == null && array[i] == null || item.Equals(array[i]))
+                if (item == null && array[i] == null || item != null && item.Equals(array[i]))
                 {
                     return true;
                 }
@@ -72,9 +72,27 @@ namespace MyList
             return false;
         }
 
+        /// <summary>
+        /// Метод для копирования объектов листа во входной массив, начиная с указанного индекса
+        /// </summary>
+        /// <param name="array">Массив, в который происходит копирование</param>
+        /// <param name="arrayIndex">Индекс, с которого объекты помещаются в новый массив</param>
+        /// <exception cref="ArgumentNullException">Выкидывается, когда входной массив null</exception>
+        /// <exception cref="IndexOutOfRangeException">Выкидывается, когда указанный индекс меньше нуля</exception>
+        /// <exception cref="ArgumentException">Выкидывается, когда входной массив недостаточной длинны
+        /// для копирования всех объектов</exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new System.NotImplementedException();
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+            if (arrayIndex < 0)
+                throw new IndexOutOfRangeException($"Index {arrayIndex} is out of range");
+            if (count > array.Length - arrayIndex)
+                throw new ArgumentException("Input array too small");
+            for (int i = 0; i < count; ++i)
+            {
+                array[i + arrayIndex] = this.array[i];
+            }
         }
 
         public bool Remove(T item)

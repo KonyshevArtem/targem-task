@@ -122,6 +122,7 @@ namespace MyListTests
             new object[] {new MyList<int> {0}, 0, true},
             new object[] {new MyList<int>(), 0, false},
             new object[] {new MyList<Stack<int>> {null}, null, true},
+            new object[] {new MyList<Stack<int>> {new Stack<int>(), null}, null, true},
             new object[] {new MyList<Stack<int>>(), null, false},
         };
 
@@ -146,6 +147,54 @@ namespace MyListTests
             Stack<int> stackB = new Stack<int>();
             MyList<Stack<int>> myList = new MyList<Stack<int>> {stackA};
             Assert.AreEqual(false, myList.Contains(stackB));
+        }
+
+        [Test]
+        public void CopyTo_ShouldThrowException_WhenArrayNull()
+        {
+            MyList<int> myList = new MyList<int>();
+            Assert.Throws<ArgumentNullException>(() => myList.CopyTo(null, 0));
+        }
+
+        [Test]
+        public void CopyTo_ShouldThrowException_WhenIndexOutOfRange()
+        {
+            MyList<int> myList = new MyList<int>();
+            Assert.Throws<IndexOutOfRangeException>(() => myList.CopyTo(new int[10], -1));
+        }
+
+        private static object[] copyToTestSource =
+        {
+            new object[] {new MyList<int> {1, 2, 3}, new int[2], 0},
+            new object[] {new MyList<int> {1, 2, 3}, new int[5], 3},
+        };
+
+        [Test, TestCaseSource(nameof(copyToTestSource))]
+        public void CopyTo_ShouldThrowException_WhenArrayTooSmall(MyList<int> list, int[] array, int index)
+        {
+            Assert.Throws<ArgumentException>(() => list.CopyTo(array, index));
+        }
+
+        [Test]
+        public void CopyTo_ShouldCopyItems()
+        {
+            MyList<int> myList = new MyList<int> {1, 2, 3};
+            int[] array = new int[4];
+            myList.CopyTo(array, 1);
+            for (int i = 0; i < array.Length; ++i)
+            {
+                Assert.AreEqual(i, array[i]);
+            }
+        }
+
+        [Test]
+        public void CopyTo_ShouldCopyByReference_WhenListContainsClasses()
+        {
+            Stack<int> stack = new Stack<int>();
+            MyList<Stack<int>> myList = new MyList<Stack<int>> {stack};
+            Stack<int>[] array = new Stack<int>[1];
+            myList.CopyTo(array, 0);
+            Assert.AreSame(stack, array[0]);
         }
     }
 }
