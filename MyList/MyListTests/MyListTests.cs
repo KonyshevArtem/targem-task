@@ -261,5 +261,63 @@ namespace MyListTests
             Assert.AreEqual(true, myList.Remove(0));
             Assert.AreEqual(0, myList.Count);
         }
+
+        [TestCase(-1), TestCase(1)]
+        public void Insert_ShouldThrowException_WhenIndexIncorrect(int index)
+        {
+            MyList<int> myList = new MyList<int>();
+            Assert.Throws<ArgumentOutOfRangeException>(() => myList.Insert(index, 0));
+        }
+
+        [Test]
+        public void Insert_ShouldInsertItem_WhenListEmpty()
+        {
+            MyList<int> myList = new MyList<int>();
+            myList.Insert(0, 0);
+            Assert.AreEqual(1, myList.Count);
+            Assert.AreEqual(0, myList[0]);
+        }
+
+        [Test]
+        public void Insert_ShouldInsertItemAtEnd_WhenListNotEmpty()
+        {
+            MyList<int> myList = new MyList<int> { 0, 1, 2 };
+            myList.Insert(3, 3);
+            Assert.AreEqual(4, myList.Count);
+            Assert.AreEqual(3, myList[3]);
+        }
+
+        [Test]
+        public void Insert_ShouldOffsetItems_WhenInsertNotAtEnd()
+        {
+            MyList<int> myList = new MyList<int> { 1, 2, 3 };
+            myList.Insert(0, 0);
+            Assert.AreEqual(4, myList.Count);
+            for (int i = 0; i < myList.Count; ++i)
+            {
+                Assert.AreEqual(i, myList[i]);
+            }
+        }
+
+        [Test]
+        public void Insert_ShouldResizeHiddenArray_WhenCapacityOverflown()
+        {
+            MyList<int> myList = new MyList<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+            myList.Insert(9, 9);
+            myList.Insert(10, 10);
+            Assert.AreEqual(11, myList.Count);
+        }
+
+        [Test]
+        public void IEnumerableConstructor_ShouldCopyInputCollection()
+        {
+            List<int> list = new List<int> { 0, 1, 2 };
+            MyList<int> myList = new MyList<int>(list);
+            Assert.AreEqual(list.Count, myList.Count);
+            for (int i = 0; i < myList.Count; ++i)
+            {
+                Assert.AreEqual(i, myList[i]);
+            }
+        }
     }
 }

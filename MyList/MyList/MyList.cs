@@ -1,12 +1,31 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MyList
 {
     public class MyList<T> : IList<T>
     {
-        private T[] array = new T[10];
+        private T[] array;
+
+        public MyList()
+        {
+            array = new T[10];
+        }
+
+        public MyList(int capacity)
+        {
+            array = new T[capacity];
+        }
+
+        public MyList(IEnumerable<T> collection) : this()
+        {
+            foreach (T item in collection)
+            {
+                Add(item);
+            }
+        }
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -22,6 +41,14 @@ namespace MyList
         }
 
 
+        private void ResizeArray()
+        {
+            T[] newArray = new T[Count * 2];
+            array.CopyTo(newArray, 0);
+            array = newArray;
+        }
+
+
         /// <summary>
         /// Метод для добавления объекта в лист
         /// Когда внутренний массив заполняется, создается новый с двойным размером
@@ -33,9 +60,7 @@ namespace MyList
         {
             if (Count == array.Length - 1)
             {
-                T[] newArray = new T[Count * 2];
-                array.CopyTo(newArray, 0);
-                array = newArray;
+                ResizeArray();
             }
 
             array[Count++] = item;
@@ -124,9 +149,32 @@ namespace MyList
             return -1;
         }
 
+        /// <summary>
+        /// Метод для вставки входного объекта в лист по указанному индексу
+        /// O(n)
+        /// </summary>
+        /// <param name="index">Индекс, на который нужно поставить входной объект</param>
+        /// <param name="item">Объект для вставки в лист</param>
+        /// <exception cref="ArgumentOutOfRangeException">Выбрасывается, когда указанный индекс меньше нуля или больше длины листа</exception>
         public void Insert(int index, T item)
         {
-            throw new System.NotImplementedException();
+            if (index < 0 || index > Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (Count == array.Length - 1)
+            {
+                ResizeArray();
+            }
+
+            for (int i = Count; i > index; --i)
+            {
+                array[i] = array[i - 1];
+            }
+
+            array[index] = item;
+            ++Count;
         }
 
         /// <summary>
